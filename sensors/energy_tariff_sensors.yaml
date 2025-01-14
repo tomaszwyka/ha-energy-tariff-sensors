@@ -1,0 +1,77 @@
+  - platform: template
+    sensors:
+      energy_tariff:
+        friendly_name: "Aktualna taryfa prądu"
+        value_template: >
+          {% set now_time = now() %}
+          {% set hour = now_time.hour %}
+          {% set weekday = now_time.weekday() %}
+          {% set day = now_time.day %}
+          {% set month = now_time.month %}
+          {% set public_holidays = [
+            (1, 1), (1, 6), (5, 1), (5, 3), (8, 15),
+            (11, 1), (11, 11), (12, 25), (12, 26)
+          ] %}
+          
+          {% if weekday >= 5 %}
+            Nocna
+          {% elif (month, day) in public_holidays %}
+            Nocna
+          {% elif (hour >= 22 or hour < 6) %}
+            Nocna
+          {% elif (hour >= 13 and hour < 15) %}
+            Nocna
+          {% else %}
+            Dzienna
+          {% endif %}
+        icon_template: >
+          {% if states('sensor.energy_tariff') == 'Nocna' %}
+            mdi:moon-waning-crescent
+          {% else %}
+            mdi:weather-sunny
+          {% endif %}
+  
+
+  - platform: template
+    sensors:
+      time_to_tariff_change:
+        friendly_name: "Time to Tariff Change"
+        value_template: >
+          {% set now_time = now() %}
+          {% set current_hour = now_time.hour %}
+          {% set current_minute = now_time.minute %}
+          {% set current_tariff = states('sensor.energy_tariff') %}
+          {% if current_tariff == 'Nocna' %}
+            {% if current_hour < 6 %}
+              {% set target_hour = 6 %}
+            {% elif current_hour < 15 %}
+              {% set target_hour = 15 %}
+            {% else %}
+              {% set target_hour = 6 %}
+              {% set next_day = true %}
+            {% endif %}
+          {% else %}
+            {% if current_hour < 22 %}
+              {% set target_hour = 22 %}
+            {% elif current_hour < 13 %}
+              {% set target_hour = 13 %}
+            {% else %}
+              {% set target_hour = 22 %}
+              {% set next_day = true %}
+            {% endif %}
+          {% endif %}
+          {% if target_hour > current_hour %}
+            {% set remaining_hours = target_hour - current_hour %}
+          {% else %}
+            {% set remaining_hours = (target_hour + 24) - current_hour %}
+          {% endif %}
+          {% if current_minute > 0 %}
+            {% set remaining_minutes = 60 - current_minute %}
+            {% set remaining_hours = remaining_hours - 1 %}
+          {% else %}
+            {% set remaining_minutes = 0 %}
+          {% endif %}
+          {% if remaining_hours < 0 %}
+            {% set remaining_hours = 0 %}
+          {% endif %}
+          "{{ remaining_hours | int }}h {{ remaining_minutes | int }}m"
