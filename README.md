@@ -1,3 +1,4 @@
+
 # Home Assistant Energy Tariff Sensors
 
 ## Description
@@ -9,7 +10,7 @@ This repository contains the configuration for **Home Assistant** sensors that d
 ## Contents
 
 - **`configuration.yaml`**:
-  - Contains a reference to an external folder with sensor files:  
+  - Contains a reference to an external folder with sensor files:
     ```yaml
     sensor: !include_dir_merge_list sensors/
     ```
@@ -62,6 +63,7 @@ This repository contains the configuration for **Home Assistant** sensors that d
 ## Dashboard Examples
 
 ### Entity Card
+
 ```yaml
 type: entities
 entities:
@@ -69,3 +71,37 @@ entities:
     name: Current Energy Tariff
   - entity: sensor.time_to_tariff_change
     name: Time to Tariff Change
+```
+
+### Dynamic Markdown Card
+
+```yaml
+type: markdown
+content: >
+  {% if states('sensor.energy_tariff') == 'Night' %}
+    **Night tariff is active** 🌙  
+    Time until day tariff: {{ states('sensor.time_to_tariff_change') }}
+  {% else %}
+    **Day tariff is active** ☀️  
+    Time until night tariff: {{ states('sensor.time_to_tariff_change') }}
+  {% endif %}
+```
+
+---
+
+## Requirements
+
+- Installed **Home Assistant**.
+- Basic knowledge of YAML configuration.
+
+---
+
+## Contribution
+
+If you have ideas for improvements or encounter any issues, feel free to open an **Issue** or submit a **Pull Request**.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
